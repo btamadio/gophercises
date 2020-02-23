@@ -11,20 +11,33 @@ import (
 	"time"
 )
 
-func askQuestions(records [][]string, result chan<- bool, finished chan<- bool) {
+func askQuestions(problems []problem, result chan<- bool, finished chan<- bool) {
 	rd := bufio.NewReader(os.Stdin)
 
-	for i, record := range records {
+	for i, prob := range problems {
 
-		fmt.Printf("Problem #%d: %s: = ", i+1, record[0])
+		fmt.Printf("Problem #%d: %s: = ", i+1, prob.question)
 
 		text, err := rd.ReadString('\n')
 		if err != nil {
 			log.Fatal(err)
 		}
-		result <- strings.Trim(text, "\n ") == record[1]
+		result <- strings.Trim(text, "\n ") == prob.answer
 	}
 	finished <- true
+}
+
+type problem struct{
+	question string
+	answer string
+}
+
+func parseLines(lines [][]string) []problem{
+	problems := make([]problem, len(lines))
+	for i, line := range lines{
+		problems[i] = problem{question: line[0], answer: line[1]}
+	}
+	return problems
 }
 
 func main() {
@@ -39,18 +52,19 @@ func main() {
 		return
 	}
 
-	records, err := csv.NewReader(csvfile).ReadAll()
+	lines, err := csv.NewReader(csvfile).ReadAll()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	problems := parseLines(lines)
+
 	fmt.Print("Press enter to begin quiz")
 	_, _ = bufio.NewReader(os.Stdin).ReadString('\n')
 
-
 	problemResult := make(chan bool)
 	finished := make(chan bool)
-	go askQuestions(records, problemResult, finished)
+	go askQuestions(problems, problemResult, finished)
 	timeout := time.After(time.Duration(*timeLimit) * time.Second)
 
 	numCorrect := 0
@@ -64,7 +78,7 @@ func main() {
 				}
 
 			case <-timeout:
-				fmt.Printf("\nTime's Up! You scored %d out of %d.\n", numCorrect, len(records))
+				fmt.Printf("\nTime's Up! You scored %d out of %d.\n", numCorrect, len(lines))
 				os.Exit(0)
 
 			case <-finished:
@@ -72,5 +86,5 @@ func main() {
 
 			}
 		}
-	fmt.Printf("Quiz completed! You scored %d out of %d.\n", numCorrect, len(records))
+	fmt.Printf("Quiz completed! You scored %d out of %d.\n", numCorrect, len(lines))
 }
