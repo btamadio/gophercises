@@ -27,15 +27,18 @@ func askQuestions(problems []problem, result chan<- bool, finished chan<- bool) 
 	finished <- true
 }
 
-type problem struct{
+type problem struct {
 	question string
-	answer string
+	answer   string
 }
 
-func parseLines(lines [][]string) []problem{
+func parseLines(lines [][]string) []problem {
 	problems := make([]problem, len(lines))
-	for i, line := range lines{
-		problems[i] = problem{question: line[0], answer: line[1]}
+	for i, line := range lines {
+		problems[i] = problem{
+			question: line[0],
+			answer:   strings.TrimSpace(line[1]),
+		}
 	}
 	return problems
 }
@@ -68,23 +71,23 @@ func main() {
 	timeout := time.After(time.Duration(*timeLimit) * time.Second)
 
 	numCorrect := 0
-	Loop:
-		for {
-			select {
+Loop:
+	for {
+		select {
 
-			case correctAnswer := <-problemResult:
-				if correctAnswer {
-					numCorrect++
-				}
-
-			case <-timeout:
-				fmt.Printf("\nTime's Up! You scored %d out of %d.\n", numCorrect, len(lines))
-				os.Exit(0)
-
-			case <-finished:
-				break Loop
-
+		case correctAnswer := <-problemResult:
+			if correctAnswer {
+				numCorrect++
 			}
+
+		case <-timeout:
+			fmt.Printf("\nTime's Up! You scored %d out of %d.\n", numCorrect, len(lines))
+			os.Exit(0)
+
+		case <-finished:
+			break Loop
+
 		}
+	}
 	fmt.Printf("Quiz completed! You scored %d out of %d.\n", numCorrect, len(lines))
 }
