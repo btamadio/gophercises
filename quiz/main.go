@@ -39,25 +39,22 @@ func main() {
 		return
 	}
 
-	csvReader := csv.NewReader(csvfile)
-	records, err := csvReader.ReadAll()
+	records, err := csv.NewReader(csvfile).ReadAll()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	inputReader := bufio.NewReader(os.Stdin)
-
 	fmt.Print("Press enter to begin quiz")
-	_, _ = inputReader.ReadString('\n')
+	_, _ = bufio.NewReader(os.Stdin).ReadString('\n')
 
-	numCorrect := 0
+
 	problemResult := make(chan bool)
 	finished := make(chan bool)
-
 	go askQuestions(records, problemResult, finished)
 	timeout := time.After(time.Duration(*timeLimit) * time.Second)
 
-	loop:
+	numCorrect := 0
+	Loop:
 		for {
 			select {
 
@@ -71,7 +68,7 @@ func main() {
 				os.Exit(0)
 
 			case <-finished:
-				break loop
+				break Loop
 
 			}
 		}
