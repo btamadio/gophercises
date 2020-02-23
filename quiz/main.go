@@ -10,6 +10,27 @@ import (
 	"strings"
 )
 
+func runQuiz(records [][]string) int{
+
+	rd := bufio.NewReader(os.Stdin)
+	numCorrect := 0
+	for i, record := range records {
+		problem := record[0]
+		solution := record[1]
+
+		fmt.Printf("Problem #%d: %s: = ", i+1, problem)
+		text, err := rd.ReadString('\n')
+		if err != nil{
+			log.Fatal(err)
+		}
+
+		if strings.Trim(text, "\n ") == solution{
+			numCorrect ++
+		}
+	}
+	return numCorrect
+}
+
 func main(){
 	fileName := flag.String("csv", "problems.csv", "a csv file in the format of 'question, answer'")
 //	timeLimit := flag.Int("limit", 30, "the time limit for the quiz in seconds")
@@ -30,23 +51,10 @@ func main(){
 
 	inputReader := bufio.NewReader(os.Stdin)
 
-	numCorrect := 0
-	numProblems := len(records)
+	fmt.Print("Press enter to begin quiz")
+	_, _ = inputReader.ReadString('\n')
 
-	for i, record := range records {
-		problem := record[0]
-		solution := record[1]
+	result := runQuiz(records)
 
-		fmt.Printf("Problem #%d: %s: = ", i+1, problem)
-		text, err := inputReader.ReadString('\n')
-		if err != nil{
-			log.Fatal(err)
-		}
-
-		if strings.Trim(text, "\n ") == solution{
-			numCorrect +=1
-			fmt.Println("good job!")
-		}
-	}
-	fmt.Printf("You scored %d out of %d\n", numCorrect, numProblems)
+	fmt.Printf("You scored %d out of %d.\n", result, len(records))
 }
