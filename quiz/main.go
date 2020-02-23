@@ -12,8 +12,10 @@ import (
 )
 
 func askQuestions(records [][]string, result chan<- bool, finished chan<- bool) {
+	rd := bufio.NewReader(os.Stdin)
+
 	for i, record := range records {
-		rd := bufio.NewReader(os.Stdin)
+
 		fmt.Printf("Problem #%d: %s: = ", i+1, record[0])
 
 		text, err := rd.ReadString('\n')
