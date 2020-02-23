@@ -11,39 +11,35 @@ import (
 	"time"
 )
 
-
-func askQuestions(records [][]string, result chan<- bool){
+func askQuestions(records [][]string, result chan<- bool, finished chan<- bool) {
 	for i, record := range records {
-		problem := record[0]
-		solution := record[1]
-
 		rd := bufio.NewReader(os.Stdin)
-		fmt.Printf("Problem #%d: %s: = ", i+1, problem)
+		fmt.Printf("Problem #%d: %s: = ", i+1, record[0])
 
 		text, err := rd.ReadString('\n')
 		if err != nil {
 			log.Fatal(err)
 		}
-		
-		result <- strings.Trim(text, "\n ") == solution
+		result <- strings.Trim(text, "\n ") == record[1]
 	}
+	finished <- true
 }
 
-func main(){
+func main() {
 	fileName := flag.String("csv", "problems.csv", "a csv file in the format of 'question, answer'")
 	timeLimit := flag.Int("limit", 30, "the time limit for the quiz in seconds")
 
 	flag.Parse()
 
 	csvfile, err := os.Open(*fileName)
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
 	csvReader := csv.NewReader(csvfile)
 	records, err := csvReader.ReadAll()
-	if err != nil{
+	if err != nil {
 		log.Fatal(err)
 	}
 
@@ -53,21 +49,29 @@ func main(){
 	_, _ = inputReader.ReadString('\n')
 
 	numCorrect := 0
-	result := make(chan bool)
+	problemResult := make(chan bool)
+	finished := make(chan bool)
 
-	go askQuestions(records, result)
+	go askQuestions(records, problemResult, finished)
 	timeout := time.After(time.Duration(*timeLimit) * time.Second)
 
-	for _, _ = range records{
-		select{
-		case correct := <- result:
-			if correct {
-				numCorrect++
+	loop:
+		for {
+			select {
+
+			case correctAnswer := <-problemResult:
+				if correctAnswer {
+					numCorrect++
+				}
+
+			case <-timeout:
+				fmt.Printf("\nTime's Up! You scored %d out of %d.\n", numCorrect, len(records))
+				os.Exit(0)
+
+			case <-finished:
+				break loop
+
 			}
-		case <- timeout:
-			fmt.Printf("\nTime's Up! You scored %d out of %d.\n", numCorrect, len(records))
-			os.Exit(0)
 		}
-	}
-	fmt.Printf("You scored %d out of %d.\n", numCorrect, len(records))
+	fmt.Printf("Quiz completed! You scored %d out of %d.\n", numCorrect, len(records))
 }
