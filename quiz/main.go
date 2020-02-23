@@ -8,32 +8,31 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
-func runQuiz(records [][]string) int{
 
-	rd := bufio.NewReader(os.Stdin)
-	numCorrect := 0
+func askQuestions(records [][]string, result chan<- bool){
 	for i, record := range records {
 		problem := record[0]
 		solution := record[1]
-
+		rd := bufio.NewReader(os.Stdin)
 		fmt.Printf("Problem #%d: %s: = ", i+1, problem)
 		text, err := rd.ReadString('\n')
-		if err != nil{
+		if err != nil {
 			log.Fatal(err)
 		}
-
-		if strings.Trim(text, "\n ") == solution{
-			numCorrect ++
+		if strings.Trim(text, "\n ") == solution {
+			result <- true
+		} else {
+			result <- false
 		}
 	}
-	return numCorrect
 }
 
 func main(){
 	fileName := flag.String("csv", "problems.csv", "a csv file in the format of 'question, answer'")
-//	timeLimit := flag.Int("limit", 30, "the time limit for the quiz in seconds")
+	timeLimit := flag.Int("limit", 30, "the time limit for the quiz in seconds")
 
 	flag.Parse()
 
@@ -54,7 +53,22 @@ func main(){
 	fmt.Print("Press enter to begin quiz")
 	_, _ = inputReader.ReadString('\n')
 
-	result := runQuiz(records)
+	numCorrect := 0
+	result := make(chan bool)
 
-	fmt.Printf("You scored %d out of %d.\n", result, len(records))
+	go askQuestions(records, result)
+	timeout := time.After(time.Duration(*timeLimit) * time.Second)
+
+	for _, _ = range records{
+		select{
+		case correct := <- result:
+			if correct {
+				numCorrect++
+			}
+		case <- timeout:
+			fmt.Printf("\nTime's Up! You scored %d out of %d.\n", numCorrect, len(records))
+			os.Exit(0)
+		}
+	}
+	fmt.Printf("You scored %d out of %d.\n", numCorrect, len(records))
 }
