@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/csv"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -10,7 +11,12 @@ import (
 )
 
 func main(){
-	csvfile, err := os.Open("problems.csv")
+	fileName := flag.String("csv", "problems.csv", "a csv file in the format of 'question, answer'")
+//	timeLimit := flag.Int("limit", 30, "the time limit for the quiz in seconds")
+
+	flag.Parse()
+
+	csvfile, err := os.Open(*fileName)
 	if err != nil{
 		log.Fatal(err)
 		return
