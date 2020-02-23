@@ -16,17 +16,16 @@ func askQuestions(records [][]string, result chan<- bool){
 	for i, record := range records {
 		problem := record[0]
 		solution := record[1]
+
 		rd := bufio.NewReader(os.Stdin)
 		fmt.Printf("Problem #%d: %s: = ", i+1, problem)
+
 		text, err := rd.ReadString('\n')
 		if err != nil {
 			log.Fatal(err)
 		}
-		if strings.Trim(text, "\n ") == solution {
-			result <- true
-		} else {
-			result <- false
-		}
+		
+		result <- strings.Trim(text, "\n ") == solution
 	}
 }
 
