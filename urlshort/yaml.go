@@ -5,20 +5,20 @@ import (
 	"log"
 )
 
-type RedirectLink struct{
-	Path string
-	URL string
+type RedirectLink struct {
+	Path string `yaml:"path"`
+	URL  string `yaml:"url"`
 }
 
-func parseYaml(b []byte) map[string]string{
-	r := []RedirectLink{}
+func parseYaml(b []byte) map[string]string {
+	var r []RedirectLink
 	err := yaml.Unmarshal(b, &r)
-	if err != nil{
+	if err != nil {
 		log.Fatal("failed to unmarshal YAML\n")
 	}
 
 	m := make(map[string]string)
-	for _, rl := range r{
+	for _, rl := range r {
 		m[rl.Path] = rl.URL
 	}
 	return m

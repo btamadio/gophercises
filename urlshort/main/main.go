@@ -16,10 +16,10 @@ func main() {
 	}
 	mapHandler := urlshort.MapHandler(pathsToUrls, mux)
 
-//	YAML is very finicky ... number of spaces matters!
+	//	YAML is very finicky ... number of spaces matters!
 	yaml := `
 - path: /urlshort
-  url: https://github.com/gophercises/urlshort
+url: https://github.com/gophercises/urlshort
 - path: /urlshort-final
   url: https://github.com/gophercises/urlshort/tree/solution
 `

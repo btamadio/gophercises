@@ -14,10 +14,10 @@ func MapHandler(pathsToUrls map[string]string, fallback http.Handler) http.Handl
 	return func(w http.ResponseWriter, r *http.Request){
 		url, ok := pathsToUrls[r.URL.Path]
 		if ok{
-			http.Redirect(w, r, url, http.StatusMovedPermanently)
-		} else{
-			fallback.ServeHTTP(w, r)
+			http.Redirect(w, r, url, http.StatusFound)
+			return
 		}
+		fallback.ServeHTTP(w, r)
 	}
 }
 
